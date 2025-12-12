@@ -1,1 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navidad Countdown</title>
+    <style>
+        /* ============================================
+       CUSTOM FONTS
+       ============================================ */
+        @font-face {
+            font-family: "HeadingNow";
+            src: url('./fonts/HeadingNowTrial-66Bold.ttf');
+        }
+
+        @font-face {
+            font-family: "Konsens";
+            src: url('./fonts/KonsensExtrabold.otf');
+        }
+
+        /* ============================================
+       BASE STYLES
+       ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Konsens", "Konsens", sans-serif;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+        }
+
+        /* ============================================
+       COUNTDOWN POSITIONING - EASY TO ADJUST!
+
+       Modify these CSS variables to move the countdown:
+       - Use 'auto' to disable a direction
+       - Adjust percentages or vh/vw units as needed
+       ============================================ */
+        :root {
+            /* Main countdown position */
+            --countdown-top: auto;
+            --countdown-bottom: 15%;
+            --countdown-left: 50%;
+            --countdown-right: auto;
+            --countdown-transform: translateX(-50%);
+
+            /* Font sizes */
+            --countdown-number-size: 14vh;
+            --countdown-label-size: 4vh;
+
+            /* Colors - Christmas themed */
+            --countdown-color: #ffffff;
+            --countdown-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ============================================
+       COUNTDOWN DISPLAY STYLES
+       ============================================ */
+        #countdown {
+            position: fixed;
+            top: var(--countdown-top);
+            bottom: var(--countdown-bottom);
+            left: var(--countdown-left);
+            right: var(--countdown-right);
+            transform: var(--countdown-transform);
+
+            display: flex;
+            gap: 3vw;
+            z-index: 100;
+
+            color: var(--countdown-color);
+            text-shadow: var(--countdown-shadow);
+            text-align: center;
+        }
+
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .countdown-number {
+            font-family: "Konsens", sans-serif;
+            font-size: var(--countdown-number-size);
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .countdown-label {
+            font-family: "Konsens", sans-serif;
+            font-size: var(--countdown-label-size);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.9;
+        }
+
+        /* ============================================
+       RESPONSIVE STYLES PER SCREEN SIZE
+       Adjust countdown position for each video size
+       ============================================ */
+
+        /* 600x810 (Portrait Display) */
+        .size-600x810 {
+            --countdown-bottom: 12%;
+            --countdown-left: 35%;
+            --countdown-number-size: 10vh;
+            --countdown-label-size: 3vh;
+        }
+
+        .size-600x810 #countdown {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2vw;
+        }
+
+        /* 768x320 (Wide Display) */
+        .size-768x320 {
+            --countdown-top: 42%;
+            --countdown-right: 11%;             /* 2% = almost touching the edge */
+            --countdown-left: auto;
+            --countdown-transform: none;
+            
+            --countdown-number-size: 21vh;
+            --countdown-label-size: 5.5vh;
+        }
+
+        .size-768x320 #countdown {
+            justify-content: flex-end;
+            gap: 2vw;
+        }
+
+        /* ============================================
+       ANIMATIONS
+       ============================================ */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .countdown-number {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <!-- Countdown Display -->
+        <div id="countdown">
+            <div class="countdown-item">
+                <span id="days" class="countdown-number">00</span>
+            </div>
+            <!-- <div class="countdown-item">
+                <span id="hours" class="countdown-number">00</span>
+                <span class="countdown-label">Horas</span>
+            </div>
+            <div class="countdown-item">
+                <span id="minutes" class="countdown-number">00</span>
+                <span class="countdown-label">Min</span>
+            </div>
+            <div class="countdown-item">
+                <span id="seconds" class="countdown-number">00</span>
+                <span class="countdown-label">Seg</span>
+            </div> -->
+        </div>
+
+        <!-- Video Background -->
+        <video id="video" autoplay muted loop playsinline preload="auto">
+            <source id="source" src="./videos/768x320.mp4" type="video/mp4">
+            Tu navegador no soporta video HTML5.
+        </video>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ============================================
+            // TARGET DATE: CHRISTMAS 2025
+            // Timezone: America/Guayaquil (Ecuador)
+            // ============================================
+            const TARGET_DATE = new Date('2025-12-25T00:00:00-05:00'); // Ecuador is UTC-5
+
+            // Get URL parameters for screen size
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetWidth = parseInt(urlParams.get('width')) || window.innerWidth;
+            const targetHeight = parseInt(urlParams.get('height')) || window.innerHeight;
+
+            // Elements
+            const videoEl = document.getElementById('video');
+            const sourceEl = document.getElementById('source');
+            const countdownEl = document.getElementById('countdown');
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+
+            // ============================================
+            // SELECT VIDEO BASED ON SCREEN SIZE
+            // ============================================
+            let newSrc = '';
+            let sizeClass = '';
+
+            if (targetWidth <= 600) {
+                newSrc = './videos/OOH_ECU_10SEG_NAVIDAD_600x810_002.mp4';
+                sizeClass = 'size-600x810';
+            } else {
+                newSrc = './videos/OOH_ECU_10SEG_NAVIDAD_768x320_2.mp4';
+                sizeClass = 'size-768x320';
+            }
+
+            document.body.className = sizeClass;
+
+            // Update video source if different
+            if (!sourceEl.src.includes(encodeURIComponent(newSrc.split('/').pop()))) {
+                videoEl.pause();
+                sourceEl.src = newSrc;
+                videoEl.load();
+            }
+
+            // ============================================
+            // COUNTDOWN LOGIC
+            // ============================================
+            function updateCountdown() {
+                // Get current time in Ecuador timezone
+                const now = new Date();
+                const ecuadorTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Guayaquil' }));
+
+                // Calculate difference
+                const diff = TARGET_DATE - ecuadorTime;
+
+                if (diff <= 0) {
+                    // Target date reached!
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minutesEl.textContent = '00';
+                    secondsEl.textContent = '00';
+                    return;
+                }
+
+                // Calculate time units
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // Update display with zero-padding
+                daysEl.textContent = String(days).padStart(2, '0');
+                // hoursEl.textContent = String(hours).padStart(2, '0');
+                // minutesEl.textContent = String(minutes).padStart(2, '0');
+                // secondsEl.textContent = String(seconds).padStart(2, '0');
+            }
+
+            // Initial update
+            updateCountdown();
+
+            // Update every second
+            // setInterval(updateCountdown, 1000);
+
+            // ============================================
+            // VIDEO PLAYBACK
+            // ============================================
+            videoEl.addEventListener('playing', () => {
+                console.log('✅ Video started playing');
+                countdownEl.classList.add('fade-in');
+            });
+
+            videoEl.play().catch(err => console.warn('Autoplay issue:', err));
+        });
+    </script>
+
+</body>
+
+</html>
