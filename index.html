@@ -133,10 +133,11 @@
         /* 768x320 (Wide Display) */
         .size-768x320 {
             --countdown-top: 42%;
-            --countdown-right: 11%;             /* 2% = almost touching the edge */
+            --countdown-right: 11%;
+            /* 2% = almost touching the edge */
             --countdown-left: auto;
             --countdown-transform: none;
-            
+
             --countdown-number-size: 21vh;
             --countdown-label-size: 5.5vh;
         }
@@ -206,7 +207,7 @@
 
         <!-- Video Background -->
         <video id="video" autoplay muted loop playsinline preload="auto">
-            <source id="source" src="./videos/768x320.mp4" type="video/mp4">
+            <source id="source" src="./videos/768x320-s.mp4" type="video/mp4">
             Tu navegador no soporta video HTML5.
         </video>
     </div>
@@ -234,16 +235,34 @@
             const secondsEl = document.getElementById('seconds');
 
             // ============================================
-            // SELECT VIDEO BASED ON SCREEN SIZE
+            // CALCULATE DAYS REMAINING FIRST
+            // (needed to select correct video - singular vs plural)
+            // ============================================
+            function getDaysRemaining() {
+                const now = new Date();
+                const ecuadorTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Guayaquil' }));
+                const diff = TARGET_DATE - ecuadorTime;
+                if (diff <= 0) return 0;
+                return Math.floor(diff / (1000 * 60 * 60 * 24));
+            }
+
+            const daysRemaining = getDaysRemaining();
+            const isPlural = daysRemaining !== 1; // true if 0, 2, 3, 4... days
+
+            // ============================================
+            // SELECT VIDEO BASED ON SCREEN SIZE + SINGULAR/PLURAL
+            // Videos ending with "-s" are for plural (2+ days)
+            // Videos without "-s" are for singular (1 day)
             // ============================================
             let newSrc = '';
             let sizeClass = '';
+            const suffix = isPlural ? '-s' : '';
 
             if (targetWidth <= 600) {
-                newSrc = './videos/OOH_ECU_10SEG_NAVIDAD_600x810_002.mp4';
+                newSrc = `./videos/600x810${suffix}.mp4`;
                 sizeClass = 'size-600x810';
             } else {
-                newSrc = './videos/OOH_ECU_10SEG_NAVIDAD_768x320_2.mp4';
+                newSrc = `./videos/768x320${suffix}.mp4`;
                 sizeClass = 'size-768x320';
             }
 
